@@ -35,7 +35,7 @@ def generateFont():
 	monocraft.fontname = "Minefont"
 	monocraft.familyname = "Minefont"
 	monocraft.fullname = "Minefont"
-	monocraft.copyright = "Idrees Hassan, Dmitry Burlakov https://github.com/IdreesInc/Monocraft"
+	monocraft.copyright = "Idrees Hassan, Dheatly23, Dmitry Burlakov https://github.com/IdreesInc/Monocraft"
 	monocraft.encoding = "UnicodeFull"
 	monocraft.version = "2.5"
 	monocraft.weight = "Regular"
