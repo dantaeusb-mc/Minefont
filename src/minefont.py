@@ -15,12 +15,13 @@
 
 import os
 import fontforge
+import math
 import json
 from generate_diacritics import generateDiacritics
 from generate_examples import generateExamples
 from polygonizer import PixelImage, generatePolygons
 
-PIXEL_SIZE = 120
+PIXEL_SIZE = 128
 
 characters = json.load(open("./characters.json"))
 diacritics = json.load(open("./diacritics.json"))
@@ -31,36 +32,45 @@ charactersByCodepoint = {}
 
 def generateFont():
 	monocraft = fontforge.font()
-	monocraft.fontname = "Monocraft"
-	monocraft.familyname = "Monocraft"
-	monocraft.fullname = "Monocraft"
-	monocraft.copyright = "Idrees Hassan, https://github.com/IdreesInc/Monocraft"
+	monocraft.fontname = "Minefont"
+	monocraft.familyname = "Minefont"
+	monocraft.fullname = "Minefont"
+	monocraft.copyright = "Idrees Hassan, Dmitry Burlakov https://github.com/IdreesInc/Monocraft"
 	monocraft.encoding = "UnicodeFull"
-	monocraft.version = "2.4"
+	monocraft.version = "2.5"
 	monocraft.weight = "Regular"
-	monocraft.ascent = PIXEL_SIZE * 8
+	monocraft.ascent = PIXEL_SIZE * 7
 	monocraft.descent = PIXEL_SIZE
-	monocraft.em = PIXEL_SIZE * 9
+	monocraft.design_size = 8
+	monocraft.em = math.floor(PIXEL_SIZE * 7.75)
 	monocraft.upos = -PIXEL_SIZE # Underline position
 	monocraft.addLookup("ligatures", "gsub_ligature", (), (("liga",(("dflt",("dflt")),)),))
 	monocraft.addLookupSubtable("ligatures", "ligatures-subtable")
 
 	for character in characters:
+		if not "pixels" in character:
+			print(f'No pixel data for {character["name"]} {character["codepoint"]}')
+			continue
+
 		charactersByCodepoint[character["codepoint"]] = character
 		monocraft.createChar(character["codepoint"], character["name"])
 		pen = monocraft[character["name"]].glyphPen()
 		top = 0
-		drawn = character
+		drawn = character["pixels"]
 
 		drawImage(generateImage(character), pen)
-		monocraft[character["name"]].width = PIXEL_SIZE * 6
+		monocraft[character["name"]].width = len(character["pixels"][0]) * PIXEL_SIZE
+		monocraft[character["name"]].left_side_bearing = math.floor(PIXEL_SIZE / 2)
+		monocraft[character["name"]].right_side_bearing = math.floor(PIXEL_SIZE / 2)
 	print(f"Generated {len(characters)} characters")
+
+	monocraft.autoHint()
 
 	outputDir = "../dist/"
 	if not os.path.exists(outputDir):
 		os.makedirs(outputDir)
 
-	monocraft.generate(outputDir + "Monocraft-no-ligatures.ttf")
+	monocraft.generate(outputDir + "Minefont-no-ligatures.ttf")
 
 	for ligature in ligatures:
 		lig = monocraft.createChar(-1, ligature["name"])
@@ -70,8 +80,8 @@ def generateFont():
 		lig.addPosSub("ligatures-subtable", tuple(map(lambda codepoint: charactersByCodepoint[codepoint]["name"], ligature["sequence"])))
 	print(f"Generated {len(ligatures)} ligatures")
 
-	monocraft.generate(outputDir + "Monocraft.ttf")
-	monocraft.generate(outputDir + "Monocraft.otf")
+	monocraft.generate(outputDir + "Minefont.ttf")
+	monocraft.generate(outputDir + "Minefont.otf")
 
 def generateImage(character):
 	image = PixelImage()
